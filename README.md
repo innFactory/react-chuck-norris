@@ -32,7 +32,13 @@
 ### 1.4. Template im Browser aufrufen
 - nun kannst du unter http://localhost:3000 die WebApp anschauen
 - müsste so aussehen, wie im Screenshot
-  <img src="doc/screenshot1.png" width="50%">
+  <img src="doc/screenshot_0.png" width="40%">
+
+### 1.4.1 Account erstellen
+- Geh auf den Link "Create an account" oder http://localhost:3000/signup
+- Wenn du dort einen Account erstellst, wir im Hintergrund ein Benutzer zu dem hinterlegten Firebase Projekt hinzugefügt
+- Du solltest dich nun anmelden können und auf die Home-Page gelangen:
+  <img src="doc/screenshot_1.png" width="50%">
 
 
 ### 1.5. Code öffnen mit VS Code
@@ -41,7 +47,7 @@
 - Öffne in VS-Code den geklonten Ordner /react-chuck-norris
 
 ### 1.6. Erste Änderung
-- Öffne in dem Projekt, dass du in VSCode offen hast das File `HomePage.tsx`
+- Öffne in dem Projekt, dass du in VSCode offen hast das File `pages/index.tsx`
 - Ändere die Überschrift "Home" zu irgendwas anderem
 - Nun müsstest du instant die Änderungen im Browser sehen
 - Falls nicht, gehe in ein Terminal und führe in deinem Projektordner `npm start` aus
@@ -82,11 +88,11 @@ Olivier Tassinari in React nach implementiert
 ### 3.1 CSS
 - Das Styling im Web basiert letztendlich immer auf CSS
 - Was CSS ist kannst dir z.B. [hier](https://developer.mozilla.org/de/docs/Learn/Getting_started_with_the_web/CSS_basics) anschauen
-- Mit der Material-UI Library kommen ein paar Erleichterungen mit, sodass man z.B. CSS direkt im Typescript-File schreiben kann: https://next.material-ui.com/styles/basics/
+- Mit der Material-UI Library kommen ein paar Erleichterungen mit, sodass man z.B. CSS direkt im Typescript-File schreiben kann: https://mui.com/styles/basics/
   
 ### 3.2 Eine coole 404 Seite gestalten
-- Gehe in das File `NotFoundPage.tsx`
-- Diese Seite wird immer angezeigt, falls die Route nicht existiert. z.B. wenn du http://localhost:3000/asdf aufrufst
+- Gehe in das File `404.tsx`
+- Diese Seite wird immer angezeigt, falls die Route nicht existiert. z.B. wenn du http://localhost:3000/asdf aufrufst (wenn du angemeldet bist)
 - Die Seite ist nicht besonders schick, darum würde ihr ein Redesign gut stehen
 - Es gibt ein paar 404 Seiten, die den Benutzer auf eine "nettere" Art sagen, dass die Seite nicht gefunden wurde hier ein paar Beispiele:
   * https://www.amazon.de/asdf
@@ -98,22 +104,23 @@ Olivier Tassinari in React nach implementiert
 ## 4. Challenge: Favoriten
 
 - Wenn man im Template einen Witz gut findet, soll man ihn zu seinen Favoriten hinzufügen können
-- Dazu gibt es bereits eine Seite, auf der eine Liste später angezeigt werden kann: `FavoritesPage.tsx`
+- Erstelle dazu eine neue Page, um dort die Liste anzuzeigen: `pages/favorites.tsx`
 - Ziel: Liste anzeigen mit Favoriten
+  
 ### 4.1 Globales State Management
 - Jede Component kann ihren eigenen State haben. Der State kann in Form von Props auch an den Kindern übergeben werden. Muss aber der State von einem Ast auf den nächsten wird diese Methode schnell aufwendig und unübersichtlich. Darum brauchen wir für manche Daten ein "globales Statemanagement"
 - In diesen Template verwenden wir hierfür [recoil](https://recoiljs.org/)
 - Da gibt's ein gutes Video, indem die Funktionsweise erklärt wird: https://youtu.be/_ISAA_Jt9kI
-- Der aktuelle Chucknorris Witz auf der HomePage wird in einem solchen "globalen State" gehalten, damit mehrere Komponenten problemlos darauf zugreifen können und diesen ggf. verändern können. Dies findest du im Ordner `src/state`
-- Der Witze selbst kommen von der Chucknorris API. Der Request ist getrennt vom State und befindet sich im Ordner `/api`
+- In dem Projekt ist hierfür ein Demo mit eingebaut. Du hast dich sicher schon gefragt für was die "Colors" sind. Unter Colors kannst du eine zufällige Farbe erstellen und sie mit "Add color to list" zur Tabelle hinzufügen. Im Hintergrund wird hierbei die Farbe zu einem Recoil-State-Atom hinzugefügt. Das findest du unter `src/randomColor/state/`
+- Auf den State selbst wird dann mit einem Hook (`const [colorList, setColorList] = useRecoilState(colorsState);`) z.B. in der Komponente `src/randomColor/components/RandomColorGenerator.tsx` zugegriffen.
   
 
 ### 4.2 Favoriten im State
+- Zu nächst brauchen wir noch einen Button, damit ein Joke favorisiert werden kann. Ähnlich wie bei den Colors kannst du neben den Button "New Joke" einfach noch einen Favoriten-Button hinzufügen
 - Nun brauchen wir eine Liste mit Jokes als Favoriten im State
-- Immer wenn man auf den Stern-Button auf der HomePage drückt, soll der entsprechende Witz zu dieser Liste hinzugefügt werden
-- Die Liste wird dann in der FavoritesPage gelesen und angezeigt
-- Dafür brauchen wir keine Request in /api und damit auch keine selector. Recoil-Atoms werden vollkommen ausreichen.
-- Als Beispiel kann man sich anschauen, wie ein einfacher Boolean-Wert gehalten wird, wie z.B. der drawerOpenState
+- Immer wenn man auf den Favoriten-Button auf der HomePage drückt, soll der entsprechende Witz zu dieser Liste hinzugefügt werden
+- Die Liste wird dann in der `page/favorites.tsx` gelesen und angezeigt
+- Dafür brauchen wir keinen Request in /api und damit auch keinen selector. Recoil-Atoms werden vollkommen ausreichen.
 
 
 ## 5. Challenge: Random Cat
@@ -123,12 +130,12 @@ Neben Chucknorris Witzen wäre das Prinzip auch für Katzen Fotos cool. Dazu gib
 
 ### 5.1 Neue Seite mit zufälligem Katzenbild
 - Lege eine neue Seite in `/pages` an, die zufällige Katzenbilder laden kann
+- Unter `/src` kannst du einen neuen Bereich anlegen, der dann alle nötigen Unterordner für diese fachliche Domäne zusammenhält. z.B. `/src/RandomCatPic` in diesem Ordner soll es dann wie in den anderen auch z.B. den `/components` Ordner geben.
 - Im `/model` brauchen wir einen Datentyp `CatPic`, der das JSON von  https://cataas.com/cat?json=true abbilden kann
-- Zusätzlich brauchen wir auch wieder einen State ähnlich, wie der `currentJokeState`
 
 
 ### 5.2 Favorisierte Katzen
-- Auf der existierenden `FavoritesPage.tsx` soll es einen Tab (oder irgendwas ähnliches geben), damit man auch Katzenbilder-Favoriten sehen kann
+- Auf der existierenden `favorites.tsx` soll es einen Tab (oder irgendwas ähnliches geben), damit man auch Katzenbilder-Favoriten sehen kann
 - Ähnlich wie in Challenge 4 brauchen wir hier auch wieder eine State Liste mit Katzenbildern
 
 
@@ -137,3 +144,14 @@ Neben Chucknorris Witzen wäre das Prinzip auch für Katzen Fotos cool. Dazu gib
 - Neben den Witzen von Chucknorris, wäre es ganz gut, wenn man auch eigene Witze über ein Textfeld eingeben könnte
 - Diese können entweder gleich zu den Favoriten, oder auch in einen separaten State gespeichert werden
 - Die eignen Witze können auch in der Favoriten-Liste angezeigt werden, sollen aber gekennzeichnet sein, bzw. sich durch z.b. ein Icon unterscheiden
+
+
+## 7. Eigenes Firebase Projekt erstellen
+- Firebase ist eine Teilmenge der Google-Cloud, extra aufbereitet um eine einfachere Cloudumgebung maßgeschneidert für App- und Webprojekte zu haben.
+- Lies dich einfach mal ein, damit du eine Übersicht bekommt, was Firebase alles so kann: https://firebase.google.com/
+- Anschließend kannst du dir ein Projekt erstellen
+- Beim erstellen bekommst du die Credentials für das Web diese solltest du dir kopieren, die brauchen wir später (sind aber auch in den Projekteinstellungen einsehbar)
+- Unter "Authentication" kannst du die Authentifizierung mit Email/Password aktivieren
+- Unter `src/firebase` werden die Firebase Parameter über Environment Variablen geladen. Diese Variablen kannst du in `.env.test` ändern. Falls du bei dir ein `.env.local` hast, ändere auch hier die Variablen auf dein neues Projekt.
+- In der `.firebaserc` musst du noch die Projekt-Id tauschen
+- Das Ergebnis sollte sein, dass wenn du das Projekt wieder startest und einen neuen Chuck-Norris-Account erstellt, dass dieser dann unter "Authentication" in deinem Firebase-Projekt erscheint
