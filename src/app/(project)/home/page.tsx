@@ -17,7 +17,7 @@ export default function Page() {
         if (!user) {
             router.push("/login");
         }
-    }, [user]);
+    }, [user, router]);
 
 
     return (

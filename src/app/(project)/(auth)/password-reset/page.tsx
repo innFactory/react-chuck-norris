@@ -14,7 +14,7 @@ export default function LoginPage() {
         if (user) {
             router.push("/");
         }
-    }, [user]);
+    }, [user, router]);
 
     const onPasswordReset = async (
         data: PasswordResetFormData,

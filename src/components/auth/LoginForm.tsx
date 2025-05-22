@@ -1,13 +1,12 @@
 "use client";
 
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import {Box} from "@mui/material";
-import {Form, Formik} from "formik";
+import {Box, Button, TextField} from "@mui/material";
 import Link from "next/link";
 import {useState} from "react";
+import {Controller, useForm} from "react-hook-form";
 import {z} from "zod";
-import {FormikTextField} from "@/components/formikInputs/FormikTextField";
-import {LoadingButton} from "@/components/default/LoadingButton";
+import {zodResolver} from "@hookform/resolvers/zod";
 
 interface LoginFormProps {
     onSubmit: (data: LoginFormData, callback: () => void) => void;
@@ -19,118 +18,110 @@ export interface LoginFormData {
 }
 
 const loginSchema = z.object({
-    email: z.string()
+    email: z
+        .string()
         .nonempty("This field is required")
         .email("Invalid email address"),
-    password: z.string()
-        .nonempty("This field is required"),
+    password: z.string().nonempty("This field is required"),
 });
 
-export const LoginForm: React.FC<LoginFormProps> = (props) => {
+export const LoginForm: React.FC<LoginFormProps> = ({onSubmit}) => {
     const [loading, setLoading] = useState(false);
-    const [emailForReset, setEmailForReset] = useState("");
 
-    const initialValues: LoginFormData = {
-        email: "",
-        password: "",
-    };
+    const {
+        control,
+        handleSubmit,
+        formState: {errors},
+        watch,
+    } = useForm<LoginFormData>({
+        defaultValues: {
+            email: "",
+            password: "",
+        },
+        resolver: zodResolver(loginSchema),
+    });
 
-    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
-        setEmailForReset(value);
-    };
+    const emailValue = watch("email");
 
-    const onSubmit = (data: LoginFormData) => {
+    const onFormSubmit = (data: LoginFormData) => {
         setLoading(true);
 
-        setEmailForReset(data.email);
-
-        props.onSubmit(data, () => {
+        onSubmit(data, () => {
             setLoading(false);
         });
     };
 
-    const validate = (values: LoginFormData) => {
-        try {
-            loginSchema.parse(values);
-            return {};
-        } catch (err) {
-            const errors: Partial<LoginFormData> = {};
-            if (err instanceof z.ZodError) {
-                err.errors.forEach((error) => {
-                    const field = error.path[0];
-                    if (field && typeof field === "string") {
-                        errors[field as keyof LoginFormData] = error.message;
-                    }
-                });
-            }
-            return errors;
-        }
-    };
-
     return (
-        <Formik<LoginFormData>
-            initialValues={initialValues}
-            validate={validate}
-            onSubmit={(values) => {
-                onSubmit(values);
+        <form
+            onSubmit={handleSubmit(onFormSubmit)}
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                maxWidth: "400px",
             }}
         >
-            {({handleSubmit}) => (
-                <Form onSubmit={handleSubmit} placeholder={undefined} onPointerEnterCapture={undefined}
-                      onPointerLeaveCapture={undefined}>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            maxWidth: "400px",
-                        }}
-                    >
-                        <FormikTextField
-                            name="email"
-                            type="email"
-                            label="Enter your email"
-                            onChange={handleEmailChange}
-                        />
-                        <FormikTextField
-                            name="password"
-                            type="password"
-                            label="Enter your password"
-                            sx={{
-                                marginTop: 2,
-                            }}
-                        />
-                        <Box
-                            sx={{
-                                display: "flex",
-                                flexDirection: "row-reverse",
-                                marginTop: 0.5,
-                            }}
-                        >
-                            <Link
-                                href={{
-                                    pathname: "/password-reset",
-                                    query: emailForReset ? {email: emailForReset} : {},
-                                }}
-                            >
-                                {"Reset Password"}
-                            </Link>
-                        </Box>
-                        <LoadingButton
-                            variant="contained"
-                            type="submit"
-                            endIcon={<ArrowForwardIcon/>}
-                            loading={loading}
-                            sx={{
-                                marginTop: 2,
-                                marginBottom: 1,
-                            }}
-                        >
-                            Login
-                        </LoadingButton>
-                    </Box>
-                </Form>
-            )}
-        </Formik>
+            <Controller
+                name="email"
+                control={control}
+                render={({field}) => (
+                    <TextField
+                        {...field}
+                        label="Enter your email"
+                        type="email"
+                        fullWidth
+                        error={!!errors.email}
+                        helperText={errors.email?.message}
+                        margin="normal"
+                    />
+                )}
+            />
+
+            <Controller
+                name="password"
+                control={control}
+                render={({field}) => (
+                    <TextField
+                        {...field}
+                        label="Enter your password"
+                        type="password"
+                        fullWidth
+                        error={!!errors.password}
+                        helperText={errors.password?.message}
+                        margin="normal"
+                        sx={{marginTop: 2}}
+                    />
+                )}
+            />
+
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "row-reverse",
+                    marginTop: 0.5,
+                }}
+            >
+                <Link
+                    href={{
+                        pathname: "/password-reset",
+                        query: emailValue ? {email: emailValue} : {},
+                    }}
+                >
+                    {"Reset Password"}
+                </Link>
+            </Box>
+
+            <Button
+                variant="contained"
+                type="submit"
+                endIcon={<ArrowForwardIcon/>}
+                disabled={loading}
+                sx={{
+                    marginTop: 2,
+                    marginBottom: 1,
+                }}
+            >
+                {loading ? "Loading..." : "Login"}
+            </Button>
+        </form>
     );
 };

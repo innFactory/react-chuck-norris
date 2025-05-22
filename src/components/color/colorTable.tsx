@@ -1,22 +1,22 @@
-"use client"
+"use client";
 
 import DeleteIcon from "@mui/icons-material/Delete";
 import {Box, IconButton} from "@mui/material";
 import {MaterialReactTable, MRT_ColumnDef} from "material-react-table";
-import {useMemo} from "react";
+import {useCallback, useMemo} from "react";
 import {useAtom} from "jotai";
 import {colorsState} from "@/state/colorsState";
 import {RandomColor} from "@/models/randomColor";
 
-
 export const ColorTable: React.FC = () => {
     const [colorList, setColorList] = useAtom(colorsState);
 
-    const onRemoveColor = (hex: string) => () => {
-        const updatedColors = colorList.filter((c) => c.hex !== hex);
-        console.log(updatedColors);
-        setColorList(updatedColors);
-    };
+    const onRemoveColor = useCallback(
+        (hex: string) => {
+            setColorList((prev) => prev.filter((c) => c.hex !== hex));
+        },
+        [setColorList]
+    );
 
     const columns = useMemo<MRT_ColumnDef<RandomColor>[]>(
         () => [
@@ -51,14 +51,14 @@ export const ColorTable: React.FC = () => {
                 Cell: ({cell}) => (
                     <IconButton
                         key={cell.getValue<string>()}
-                        onClick={onRemoveColor(cell.getValue<string>())}
+                        onClick={() => onRemoveColor(cell.getValue<string>())}
                     >
                         <DeleteIcon/>
                     </IconButton>
                 ),
             },
         ],
-        [colorList]
+        [onRemoveColor]
     );
 
     return <MaterialReactTable columns={columns} data={colorList}/>;

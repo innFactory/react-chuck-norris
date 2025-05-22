@@ -1,13 +1,12 @@
 "use client";
 
 import LockResetIcon from "@mui/icons-material/LockReset";
-import {Box} from "@mui/material";
-import {Form, Formik} from "formik";
+import {Box, Button, TextField} from "@mui/material";
 import Link from "next/link";
 import {useState} from "react";
+import {Controller, useForm} from "react-hook-form";
 import {z} from "zod";
-import {FormikTextField} from "@/components/formikInputs/FormikTextField";
-import {LoadingButton} from "@/components/default/LoadingButton";
+import {zodResolver} from "@hookform/resolvers/zod";
 import {useSearchParams} from "next/navigation";
 
 interface PasswordResetFormProps {
@@ -25,89 +24,77 @@ const passwordResetSchema = z.object({
         .email("Invalid email address"),
 });
 
-export const PasswordResetForm: React.FC<PasswordResetFormProps> = (props) => {
+export const PasswordResetForm: React.FC<PasswordResetFormProps> = ({onSubmit}) => {
     const [loading, setLoading] = useState(false);
     const searchParams = useSearchParams();
 
-    const initialValues: PasswordResetFormData = {
-        email: searchParams.get("email") || "",
-    };
+    const {
+        control,
+        handleSubmit,
+        formState: {errors},
+        reset,
+    } = useForm<PasswordResetFormData>({
+        defaultValues: {
+            email: searchParams.get("email") || "",
+        },
+        resolver: zodResolver(passwordResetSchema),
+    });
 
-    const onSubmit = (data: PasswordResetFormData, resetForm: () => void) => {
+    const onFormSubmit = (data: PasswordResetFormData) => {
         setLoading(true);
-        props.onSubmit(data, () => {
+        onSubmit(data, () => {
             setLoading(false);
-            resetForm();
+            reset();
         });
     };
 
-    const validate = (values: PasswordResetFormData) => {
-        try {
-            passwordResetSchema.parse(values);
-            return {};
-        } catch (err) {
-            const errors: Partial<PasswordResetFormData> = {};
-            if (err instanceof z.ZodError) {
-                err.errors.forEach((error) => {
-                    const field = error.path[0];
-                    if (field && typeof field === "string") {
-                        errors[field as keyof PasswordResetFormData] = error.message;
-                    }
-                });
-            }
-            return errors;
-        }
-    };
-
     return (
-        <Formik<PasswordResetFormData>
-            initialValues={initialValues}
-            validate={validate}
-            onSubmit={(values, {resetForm}) => {
-                onSubmit(values, resetForm);
+        <form
+            onSubmit={handleSubmit(onFormSubmit)}
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                maxWidth: "400px",
             }}
         >
-            {({handleSubmit}) => (
-                <Form
-                    onSubmit={handleSubmit}
-                    placeholder={undefined} onPointerEnterCapture={undefined}
-                    onPointerLeaveCapture={undefined}>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            maxWidth: "400px",
-                        }}
-                    >
-                        <FormikTextField
-                            name="email"
-                            type="email"
-                            label="Enter your email"
-                        />
-                        <Box
-                            sx={{
-                                display: "flex",
-                                flexDirection: "row-reverse",
-                                marginTop: 0.5,
-                            }}
-                        >
-                            <Link href="/">{"Back to login"}</Link>
-                        </Box>
-                        <LoadingButton
-                            variant="contained"
-                            type="submit"
-                            endIcon={<LockResetIcon/>}
-                            loading={loading}
-                            sx={{
-                                marginTop: 2,
-                                marginBottom: 1,
-                            }}
-                        >
-                            Reset
-                        </LoadingButton>
-                    </Box>
-                </Form>
-            )}
-        </Formik>
+            <Controller
+                name="email"
+                control={control}
+                render={({field}) => (
+                    <TextField
+                        {...field}
+                        label="Enter your email"
+                        type="email"
+                        fullWidth
+                        error={!!errors.email}
+                        helperText={errors.email?.message}
+                        margin="normal"
+                    />
+                )}
+            />
+
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "row-reverse",
+                    marginTop: 0.5,
+                }}
+            >
+                <Link href="/">{"Back to login"}</Link>
+            </Box>
+
+            <Button
+                variant="contained"
+                type="submit"
+                endIcon={<LockResetIcon/>}
+                disabled={loading}
+                sx={{
+                    marginTop: 2,
+                    marginBottom: 1,
+                }}
+            >
+                {loading ? "Loading..." : "Reset"}
+            </Button>
+        </form>
     );
 };

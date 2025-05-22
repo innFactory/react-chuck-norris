@@ -1,12 +1,11 @@
 "use client";
 
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import {Box} from "@mui/material";
-import {Form, Formik} from "formik";
+import {Button, TextField} from "@mui/material";
 import {useState} from "react";
+import {Controller, useForm} from "react-hook-form";
 import {z} from "zod";
-import {FormikTextField} from "@/components/formikInputs/FormikTextField";
-import {LoadingButton} from "@/components/default/LoadingButton";
+import {zodResolver} from "@hookform/resolvers/zod";
 
 interface SignupFormProps {
     onSubmit: (data: SignupFormData, callback: () => void) => void;
@@ -19,113 +18,117 @@ export interface SignupFormData {
 }
 
 const signupSchema = z.object({
-    email: z.string()
+    email: z
+        .string()
         .nonempty("This field is required")
         .email("Invalid email address"),
-    password: z.string()
+    password: z
+        .string()
         .nonempty("This field is required")
         .regex(
             /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{10,}$/,
             "Password must contain at least one uppercase letter, one lowercase letter, and one number, and be at least 10 characters long"
         ),
-    passwordConfirmation: z.string()
-        .nonempty("This field is required"),
+    passwordConfirmation: z.string().nonempty("This field is required"),
+}).refine((data) => data.password === data.passwordConfirmation, {
+    message: "Passwords do not match",
+    path: ["passwordConfirmation"],
 });
 
-
-export const SignupForm: React.FC<SignupFormProps> = (props) => {
+export const SignupForm: React.FC<SignupFormProps> = ({onSubmit}) => {
     const [loading, setLoading] = useState(false);
 
-    const initialValues: SignupFormData = {
-        email: "",
-        password: "",
-        passwordConfirmation: "",
-    };
+    const {
+        control,
+        handleSubmit,
+        formState: {errors},
+    } = useForm<SignupFormData>({
+        defaultValues: {
+            email: "",
+            password: "",
+            passwordConfirmation: "",
+        },
+        resolver: zodResolver(signupSchema),
+    });
 
-    const onSubmit = (data: SignupFormData) => {
+    const onFormSubmit = (data: SignupFormData) => {
         setLoading(true);
-        props.onSubmit(data, () => {
+        onSubmit(data, () => {
             setLoading(false);
         });
     };
 
-    const validate = (values: SignupFormData) => {
-        const errors: Partial<SignupFormData> = {};
-
-        try {
-            signupSchema.parse(values);
-        } catch (err) {
-            if (err instanceof z.ZodError) {
-                err.errors.forEach((error) => {
-                    const field = error.path[0];
-                    if (field && typeof field === "string") {
-                        errors[field as keyof SignupFormData] = error.message;
-                    }
-                });
-            }
-        }
-
-        if (values.password !== values.passwordConfirmation) {
-            errors.passwordConfirmation = "Passwords do not match";
-        }
-
-        return errors;
-    };
-
     return (
-        <Formik<SignupFormData>
-            initialValues={initialValues}
-            validate={validate}
-            onSubmit={(values) => {
-                onSubmit(values);
+        <form
+            onSubmit={handleSubmit(onFormSubmit)}
+            style={{
+                display: "flex",
+                flexDirection: "column",
+                maxWidth: "400px",
             }}
         >
-            {({handleSubmit}) => (
-                <Form onSubmit={handleSubmit} placeholder={undefined} onPointerEnterCapture={undefined}
-                      onPointerLeaveCapture={undefined}>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            flexDirection: "column",
-                            maxWidth: "400px",
-                        }}
-                    >
-                        <FormikTextField
-                            name="email"
-                            type="email"
-                            label="Enter your email"
-                        />
-                        <FormikTextField
-                            name="password"
-                            type="password"
-                            label="Enter your password"
-                            sx={{
-                                marginTop: 2,
-                            }}
-                        />
-                        <FormikTextField
-                            name="passwordConfirmation"
-                            type="password"
-                            label="Confirm your password"
-                            sx={{
-                                marginTop: 2,
-                            }}
-                        />
-                        <LoadingButton
-                            variant="contained"
-                            type="submit"
-                            endIcon={<PersonAddIcon/>}
-                            loading={loading}
-                            sx={{
-                                marginTop: 2,
-                                marginBottom: 1,
-                            }}
-                        >
-                            Create account
-                        </LoadingButton>
-                    </Box>
-                </Form>
-            )}
-        </Formik>
+            <Controller
+                name="email"
+                control={control}
+                render={({field}) => (
+                    <TextField
+                        {...field}
+                        label="Enter your email"
+                        type="email"
+                        fullWidth
+                        error={!!errors.email}
+                        helperText={errors.email?.message}
+                        margin="normal"
+                    />
+                )}
+            />
+
+            <Controller
+                name="password"
+                control={control}
+                render={({field}) => (
+                    <TextField
+                        {...field}
+                        label="Enter your password"
+                        type="password"
+                        fullWidth
+                        error={!!errors.password}
+                        helperText={errors.password?.message}
+                        margin="normal"
+                        sx={{marginTop: 2}}
+                    />
+                )}
+            />
+
+            <Controller
+                name="passwordConfirmation"
+                control={control}
+                render={({field}) => (
+                    <TextField
+                        {...field}
+                        label="Confirm your password"
+                        type="password"
+                        fullWidth
+                        error={!!errors.passwordConfirmation}
+                        helperText={errors.passwordConfirmation?.message}
+                        margin="normal"
+                        sx={{marginTop: 2}}
+                    />
+                )}
+            />
+
+            <Button
+                variant="contained"
+                type="submit"
+                endIcon={<PersonAddIcon/>}
+                disabled={loading}
+                sx={{
+                    marginTop: 2,
+                    marginBottom: 1,
+                }}
+            >
+                {loading ? "Loading..." : "Create account"}
+            </Button>
+        </form>
     );
 };

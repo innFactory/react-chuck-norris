@@ -15,7 +15,7 @@ export default function LoginPage() {
         if (user) {
             router.push("/");
         }
-    }, [user]);
+    }, [user, router]);
 
     const onSignup = async (data: SignupFormData, callback: () => void) => {
         await signup(data.email, data.password);

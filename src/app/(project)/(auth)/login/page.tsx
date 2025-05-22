@@ -1,23 +1,23 @@
 "use client"
 
-import { Container } from "@mui/material";
-import { Box } from "@mui/system";
+import {Container} from "@mui/material";
+import {Box} from "@mui/system";
 import Link from "next/link";
-import { useEffect } from "react";
+import {useEffect} from "react";
 import {useAuth} from "@/context/AuthContext";
 import {LoginForm, LoginFormData} from "@/components/auth/LoginForm";
 import {AuthPaper} from "@/components/auth/AuthPaper";
 import {useRouter} from "next/navigation";
 
 export default function LoginPage() {
-    const { user, login } = useAuth();
+    const {user, login} = useAuth();
     const router = useRouter();
 
     useEffect(() => {
         if (user) {
             router.push("/");
         }
-    }, [user]);
+    }, [user, router]);
 
     const onLogin = async (data: LoginFormData, callback: () => void) => {
         login(data.email, data.password);
@@ -38,7 +38,7 @@ export default function LoginPage() {
                 title="Welcome to the Chuck Norris Challenge!"
                 subtitle="Login"
             >
-                <LoginForm onSubmit={onLogin} />
+                <LoginForm onSubmit={onLogin}/>
             </AuthPaper>
             <Box
                 sx={{
